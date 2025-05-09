@@ -1,9 +1,10 @@
 import numpy as np
 from .preprocessing import create_dataloader
 from sklearn import preprocessing
-from transformers import AdamW, get_linear_schedule_with_warmup
+from transformers import get_linear_schedule_with_warmup
 import random
 import torch
+from torch import AdamW
 from tqdm import tqdm
 
 def train(model, data_loader, optimizer, device, scheduler, n_tags):
