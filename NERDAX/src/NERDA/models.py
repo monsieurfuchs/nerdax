@@ -387,7 +387,8 @@ class NERDA:
                                  'F1-Score': [f1_micro[2]],
                                  'Precision': [np.nan],
                                  'Recall': [np.nan]})
-        df = df.append(f1_micro)
+        # df = df.append(f1_micro)
+        df = pd.concat([df, pd.DataFrame([f1_micro])], ignore_index=True)
 
         # compute MACRO-averaged F1-scores and add to table.
         f1_macro = compute_f1_scores(y_pred = tags_predicted, 
@@ -398,7 +399,8 @@ class NERDA:
                                  'F1-Score': [f1_macro[2]],
                                  'Precision': [np.nan],
                                  'Recall': [np.nan]})
-        df = df.append(f1_macro)
+        # df = df.append(f1_macro)
+        df = pd.concat([df, pd.DataFrame([f1_macro])], ignore_index=True)
 
         # compute and return accuracy if desired
         if return_accuracy:
