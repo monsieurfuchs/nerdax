@@ -4,7 +4,7 @@ from sklearn import preprocessing
 from transformers import get_linear_schedule_with_warmup
 import random
 import torch
-from torch import AdamW
+from torch.optim import AdamW
 from tqdm import tqdm
 
 def train(model, data_loader, optimizer, device, scheduler, n_tags):
