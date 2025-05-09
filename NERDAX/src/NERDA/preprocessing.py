@@ -84,9 +84,13 @@ class NERDADataSetReader():
 
         # encode tokens for BERT
         # TO DO: prettify this.
+        if not self.transformer_tokenizer.cls_token_id:
+            self.transformer_tokenizer.cls_token = "[CLS]"
+        if not self.transformer_tokenizer.sep_token_id:
+            self.transformer_tokenizer.sep_token = "[SEP]"
         input_ids = self.transformer_tokenizer.convert_tokens_to_ids(tokens)
         input_ids = [self.transformer_tokenizer.cls_token_id] + input_ids + [self.transformer_tokenizer.sep_token_id]
-        
+       
         # fill out other inputs for model.    
         target_tags = [self.tag_outside_transformed] + target_tags + [self.tag_outside_transformed] 
         masks = [1] * len(input_ids)

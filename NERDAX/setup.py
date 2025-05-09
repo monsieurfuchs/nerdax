@@ -22,7 +22,11 @@ setuptools.setup(
         'nltk',
         'pandas',
         'progressbar',
-        'pyconll'
+        'pyconll',
+        'protobuf',
+        'accelerate',
+        'sentencepiece',
+        'tiktoken'
     ],
     setup_requires=['pytest-runner'],
     tests_require=['pytest',

@@ -170,8 +170,8 @@ class NERDA:
         self.max_len = max_len
         self.tag_encoder = sklearn.preprocessing.LabelEncoder()
         self.tag_encoder.fit(tag_complete)
-        self.transformer_model = AutoModel.from_pretrained(transformer)
-        self.transformer_tokenizer = AutoTokenizer.from_pretrained(transformer, **tokenizer_parameters)
+        self.transformer_model = AutoModel.from_pretrained(transformer, trust_remote_code=True)
+        self.transformer_tokenizer = AutoTokenizer.from_pretrained(transformer, **tokenizer_parameters, device_map='auto')
         self.transformer_config = AutoConfig.from_pretrained(transformer)  
         self.network = NERDANetwork(self.transformer_model, self.device, len(tag_complete), dropout = dropout)
         self.network.to(self.device)
@@ -388,7 +388,7 @@ class NERDA:
                                  'Precision': [np.nan],
                                  'Recall': [np.nan]})
         # df = df.append(f1_micro)
-        df = pd.concat([df, pd.DataFrame([f1_micro])], ignore_index=True)
+        df = pd.concat([df, f1_micro], ignore_index=True)
 
         # compute MACRO-averaged F1-scores and add to table.
         f1_macro = compute_f1_scores(y_pred = tags_predicted, 
@@ -400,7 +400,7 @@ class NERDA:
                                  'Precision': [np.nan],
                                  'Recall': [np.nan]})
         # df = df.append(f1_macro)
-        df = pd.concat([df, pd.DataFrame([f1_macro])], ignore_index=True)
+        df = pd.concat([df, f1_macro], ignore_index=True)
 
         # compute and return accuracy if desired
         if return_accuracy:
