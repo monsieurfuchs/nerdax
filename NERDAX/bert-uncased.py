@@ -1,5 +1,6 @@
 from NERDA.datasets import get_conll_data, download_conll_data
 from NERDA.models import NERDA
+from NERDA.gridsearch import NerdaEstimator
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -23,6 +24,27 @@ tag_scheme = [
 model_name = 'bert-base-multilingual-uncased'
 #model_name = 'microsoft/deberta-v3-base'
 
+param_grid = {
+   'epochs': [3,4,5],
+   'learning_rate': [0.0001, 0.000001],
+   'dropout': [0.15, 0.2, 0.3],
+   'train_batch_size': [15]
+}
+
+tag_outside = 'O'
+
+estimator = NerdaEstimator(
+                  param_grid,
+                  model_name,
+                  training,
+                  validation,
+                  tag_scheme,
+                  tag_outside)
+
+
+result=estimator.search()
+print(result)
+"""
 training_hyperparameters = {
         'epochs' : 1,
         'warmup_steps' : 500,
@@ -45,5 +67,5 @@ model = NERDA(
 model.train()
 print(model.evaluate_performance(test))
 print(model.evaluate_validation())
-
+"""
 
