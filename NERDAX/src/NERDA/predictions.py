@@ -7,6 +7,7 @@ from NERDA.preprocessing import create_dataloader
 import torch
 import numpy as np
 from tqdm import tqdm 
+import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
 from typing import List, Callable
 import transformers
@@ -63,6 +64,8 @@ def predict(network: torch.nn.Module,
         List[List[str]]: List of lists with predicted Entity
         tags.
     """
+    nltk.download('punkt_tab')
+
     # make sure, that input has the correct format. 
     assert isinstance(sentences, list), "'sentences' must be a list of list of word-tokens"
     assert isinstance(sentences[0], list), "'sentences' must be a list of list of word-tokens"
