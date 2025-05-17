@@ -96,7 +96,7 @@ class NERDA:
                  tag_outside: str = 'O',
                  dataset_training: dict = None,
                  dataset_validation: dict = None,
-                 max_len: int = 128,
+                 max_len: int = 256,
                  network: torch.nn.Module = NERDANetwork,
                  dropout: float = 0.1,
                  hyperparameters: dict = {'epochs' : 4,
@@ -395,7 +395,7 @@ class NERDA:
                                      y_true = dataset.get('tags'),
                                      labels = self.tag_scheme,
                                      average = 'macro')
-        f1_macro = pd.DataFrame({'Level' : ['AVG_MICRO'], 
+        f1_macro = pd.DataFrame({'Level' : ['AVG_MACRO'], 
                                  'F1-Score': [f1_macro[2]],
                                  'Precision': [np.nan],
                                  'Recall': [np.nan]})
@@ -404,9 +404,38 @@ class NERDA:
 
         # compute and return accuracy if desired
         if return_accuracy:
+            print("y_pred shape:", len(flatten(tags_predicted)))
+            print("y_true shape:", len(flatten(dataset.get('tags'))))
             accuracy = accuracy_score(y_pred = flatten(tags_predicted), 
                                       y_true = flatten(dataset.get('tags')))
             return {'f1':df, 'accuracy': accuracy}
       
         return df
+
+
+    def evaluate_validation(self, 
+                            return_accuracy: bool=False,
+                            **kwargs) -> pd.DataFrame:
+
+        """Evaluate performance on the validation data
+
+        Evaluates the performance of the model on the validation data set.
+
+        Args:
+            kwargs: arbitrary keyword arguments for predict. For
+                instance 'batch_size' and 'num_workers'.
+            return_accuracy (bool): Return accuracy
+                as well? Defaults to False.
+            
+        Returns:
+            DataFrame with performance numbers, F1-scores,
+            Precision and Recall. Returns dictionary with
+            this AND accuracy, if return_accuracy is set to
+            True.
+        """
+
+
+        return self.evaluate_performance(self.dataset_validation,
+                                         return_accuracy=return_accuracy,
+                                         **kwargs)
 

@@ -20,11 +20,11 @@ tag_scheme = [
 ]
 
 
-#model_name = 'bert-base-multilingual-uncased'
-model_name = 'microsoft/deberta-v3-base'
+model_name = 'bert-base-multilingual-uncased'
+#model_name = 'microsoft/deberta-v3-base'
 
 training_hyperparameters = {
-        'epochs' : 7,
+        'epochs' : 1,
         'warmup_steps' : 500,
         'train_batch_size': 13,
         'learning_rate': 0.0001
@@ -43,6 +43,7 @@ model = NERDA(
 )
 
 model.train()
-model.evaluate_performance(test)
+print(model.evaluate_performance(test))
+print(model.evaluate_validation())
 
 
