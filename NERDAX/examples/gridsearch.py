@@ -40,7 +40,7 @@ model_name = 'bert-base-multilingual-uncased'
 
 # for grid search define a parameter grid
 param_grid = {
-   'epochs': [1],
+   'epochs': [1, 2],
    'learning_rate': [0.0001],
    'dropout': [0.15],
    'train_batch_size': [15]
