@@ -105,6 +105,16 @@ def __position_labels(labels):
            
 
 def __apply_window(list_of_lists, margin=1, offset=0):
+   """
+   apply a rolling window to a list of list (needed for
+   sentence and tag lists) and return a new list of lists 
+   with window-wise concatenated lists.
+   ---
+   Parameters:
+     - list_of_lists: list - may be a list of sentences or tags
+   returns:
+     - the new list of lists
+   """
    if margin < 1 or offset < 0:
       raise Exception('Invalid margin or overlap')
    if offset > margin:
