@@ -35,13 +35,13 @@ tag_scheme = [
 
 # define the model you want to use
 model_name = 'bert-base-multilingual-uncased'
-model_name = 'FacebookAI/xlm-roberta-large'
+# model_name = 'FacebookAI/xlm-roberta-large'
 
 training_hyperparameters = {
-        'epochs' : 10,
+        'epochs' : 1,
         'warmup_steps' : 500,
         'train_batch_size': 13,
-        'learning_rate': 0.0000001
+        'learning_rate': 0.0001
 }
 
 dropout = 0.15
@@ -52,7 +52,8 @@ model = NERDA(
         tag_scheme = tag_scheme, 
         tag_outside = tag_outside, 
         transformer = model_name, 
-        dropout = dropout, 
+        dropout = dropout,
+        max_len = 300, 
         hyperparameters = training_hyperparameters
 )
 
