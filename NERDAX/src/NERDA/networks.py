@@ -64,7 +64,7 @@ class NERDANetwork(nn.Module):
         # single step.
         transformer_inputs = {
             'input_ids': input_ids.to(self.device),
-            'masks': masks.to(self.device),
+            'attention_mask': masks.to(self.device),
             'token_type_ids': token_type_ids.to(self.device)
             }
         
