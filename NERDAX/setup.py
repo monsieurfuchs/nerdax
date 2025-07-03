@@ -26,6 +26,7 @@ setuptools.setup(
         'protobuf',
         'accelerate',
         'sentencepiece',
+        'simplejson',
         'tiktoken'
     ],
     setup_requires=['pytest-runner'],

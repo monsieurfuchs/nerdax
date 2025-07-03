@@ -1,5 +1,6 @@
 import pandas as pd
-import re
+import simplejson as json
+import re, os
 
 
 def __webanno_to_df(filepath):
@@ -40,16 +41,16 @@ def __sentence_id(sentence_token):
     
     
     
-def __parse_label(label):
+def __unescape(text):
     """
-    parses a label entry and returns an unescaped label string
+    parses a string and returns an unescaped string
     ----
     Paremeters:
-      - label: string - the label string
+      - text: string - the text string
     Returns:
-      - the unescaped label as string ('O' if there is no label)
+      - the unescaped text string
     """
-    return label.replace('\\_', '_').strip()
+    return text.replace('\\_', '_').strip()
     
 
 def __parse_label_index(label):
@@ -104,47 +105,84 @@ def __position_labels(labels):
     return converted_labels
            
 
-def __apply_window(list_of_lists, margin=1, offset=0):
+def __apply_window(*args, margin=1, offset=0):
    """
    apply a rolling window to a list of list (needed for
    sentence and tag lists) and return a new list of lists 
    with window-wise concatenated lists.
+   usage: 
+   d1, d2,... = __apply-window(list_of_lists_1, list_of_lists_2,...[, margin=2] [, offset=1])
    ---
    Parameters:
-     - list_of_lists: list - may be a list of sentences or tags
+     - *args: an unlimited number of lists of lists
    returns:
-     - the new list of lists
+     a list of dictionaries - each of the form:
+     {'data': windowed_list, 'max_length': max_list_length}
    """
    if margin < 1 or offset < 0:
       raise Exception('Invalid margin or overlap')
    if offset > margin:
       raise Exception('offset must not be larger than margin')
    
-   margined = list()
-   max_length = len(list_of_lists)
-   for i in range (0, max_length, offset + 1):
-       start = max(0, i-margin)
-       stop = min(max_length, i+margin+1)
-       concatenated = list()
-       for j in range(start, stop):
-           concatenated += list_of_lists[j]
-       margined.append(concatenated)
-   return margined
+   windowed_lists = list()
+   for list_of_lists in args:
+       max_list_length = 0   
+       margined = list()
+       list_length = len(list_of_lists)
+       for i in range (0, list_length, offset + 1):
+           start = max(0, i-margin)
+           stop = min(list_length, i+margin+1)
+           concatenated = list()
+           for j in range(start, stop):
+               concatenated += list_of_lists[j]
+           margined.append(concatenated)
+           max_list_length = max(max_list_length, len(concatenated))
+       windowed_lists.append({'data': margined, 'max_length': max_list_length})
+   return windowed_lists
+   
+   
+def __flatten(*args):
+    """
+    Take lists of lists and for each make one big list out of it.
+    usage: 
+    l1, l2,... = __flatten(list_of_lists_1, list_of_lists_2,...)
+    ---
+    Parameters:
+      - *args an unlimited number of lists of lists
+    Returns:
+      the flattened lists as tuple
+    """
+    
+    concatenated_lists = list()
+    for list_of_lists in args:
+        concatenated = list()
+        for sublist in list_of_lists:
+            concatenated += sublist
+        concatenated_lists.append(concatenated)
+    return (*concatenated_lists, )
     
     
-def webanno_to_ner_train_input(filepath, margin=0, offset=0):
+    
+def webanno_to_ner_train_input(filepath, outfile=None, flatten=False, margin=0, offset=0):
     """
     Convert a webanno tsv file into a nerda-compatible
-    JSON dictionary.
+    JSON dictionary. The parameters margin and offset allow
+    for setting a sliding window for aggregating multiple
+    sentences.
     -----
     Parameters:
        filepath: string - the path to the tsv file
+       outfile: string - path to the output json file (may be None)
+       flatten: boolean - flatten all sentence lists to one single list of tokens and tags
+       margin: int - determines how many sentences before and after
+                     a sentence should be aggregated. This parameter is
+                     not effective when flatten is set to True.
+       offset: int - how many sentences to skip (useful if margin is set).
+                     This parameter is not effective when flatten is set to True.
     Returns:
        a dictionary {'sentences': list(str), 'tags': list(str)}
     """
-    nerdict = dict()
-    nerdict['sentences'] = list()
-    nerdict['tags'] = list()
+    nerdict = {'sentences': [], 'tags': [], 'metadata': {'max_sentence_length': 0}}
     
     df = __webanno_to_df(filepath)
     last_sentence_id = -1
@@ -162,13 +200,30 @@ def webanno_to_ner_train_input(filepath, margin=0, offset=0):
            current_sentence = list()
            current_labels = list()
            last_sentence_id = sentence_id
-        current_sentence.append(row.token)
-        current_labels.append(__parse_label(row.label))
+        current_sentence.append(__unescape(row.token))
+        current_labels.append(__unescape(row.label))
+        nerdict["metadata"]["max_sentence_length"] = max(nerdict["metadata"]["max_sentence_length"], len(current_sentence))
         
-    if margin > 0:
-       nerdict["sentences"] = __apply_window(nerdict["sentences"], margin=margin, offset=offset)
-       nerdict["tags"] = __apply_window(nerdict["tags"], margin=margin, offset=offset)
-        
+    if not flatten and margin > 0:
+       sentences, tags = __apply_window(nerdict["sentences"], nerdict["tags"], margin=margin, offset=offset)
+       nerdict["sentences"] = sentences["data"]
+       nerdict["tags"] = tags["data"]
+       nerdict["metadata"]["max_sentence_length"] = sentences["max_length"]
+    elif flatten:
+       sentence, tags = __flatten(nerdict["sentences"], nerdict["tags"])
+       nerdict["sentences"] = [sentence]
+       nerdict["tags"] = [tags]
+       nerdict["metadata"]["max_sentence_length"] = len(sentence)
+    
+    nerdict["metadata"]["infile"] = os.path.basename(filepath)
+    nerdict["metadata"]["margin"] = margin
+    nerdict["metadata"]["offset"] = offset
+    nerdict["metadata"]["flatten"] = flatten
+    
+    if outfile:
+       with open(outfile, 'w') as f:
+            json.dump(nerdict, f, indent=5, ignore_nan=True)
+
     return nerdict
      
               
