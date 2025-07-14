@@ -57,10 +57,11 @@ model = NERDA(
         hyperparameters = training_hyperparameters
 )
 
-model.train()
-print(model.evaluate_performance(test))
+def run_train():
+    model.train()
+    print(model.evaluate_performance(test))
 
-print("\nSample prediction:")
-text = "Der ehrenwerte Heinz Müller lag völlig falsch, als er die Existenz der Stadt Bielefeld anzweifelte."
-print(text)
-print(model.predict_text(text))
+    print("\nSample prediction:")
+    text = "Der ehrenwerte Heinz Müller lag völlig falsch, als er die Existenz der Stadt Bielefeld anzweifelte."
+    print(text)
+    return model.predict_text(text, return_tensors=True, return_transformer_outputs=True)

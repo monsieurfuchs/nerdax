@@ -29,7 +29,8 @@ def predict(network: torch.nn.Module,
             num_workers: int = 1,
             return_tensors: bool = False,
             return_confidence: bool = False,
-            pad_sequences: bool = True) -> List[List[str]]:
+            pad_sequences: bool = True,
+            return_transformer_outputs = False) -> List[List[str]]:
     """Compute predictions.
 
     Computes predictions for a list with word-tokenized sentences 
@@ -59,6 +60,13 @@ def predict(network: torch.nn.Module,
             to False.
         pad_sequences (bool, optional): if True, pad sequences. 
             Defaults to True.
+        return_tensors (bool, optional): if True, return
+            the output tensors of the last linear classification layer.
+            Defaults to False
+        return_transformer_outputs (bool_optional): if True, return
+            the output tensors of the transformer model instead of
+            the last classification layer when return_tensors is
+            set to True. Defaults to False.
 
     Returns:
         List[List[str]]: List of lists with predicted Entity
@@ -96,7 +104,7 @@ def predict(network: torch.nn.Module,
     with torch.no_grad():
         for _, dl in enumerate(dl): 
 
-            outputs = network(**dl)   
+            outputs, transformer_outputs = network(**dl)   
 
             # conduct operations on sentence level.
             for i in range(outputs.shape[0]):
@@ -110,7 +118,10 @@ def predict(network: torch.nn.Module,
                 probs = values.cpu().numpy()
 
                 if return_tensors:
-                    tensors.append(outputs)    
+                    if return_transformer_outputs:
+                       tensors.append(transformer_outputs)
+                    else:
+                       tensors.append(outputs)
 
                 # subset predictions for original word tokens.
                 preds = [prediction for prediction, offset in zip(preds.tolist(), dl.get('offsets')[i]) if offset]
@@ -157,7 +168,8 @@ def predict_text(network: torch.nn.Module,
                  return_confidence: bool = False,
                  sent_tokenize: Callable = sent_tokenize,
                  word_tokenize: Callable = word_tokenize,
-                 return_tensors: bool = False) -> tuple:
+                 return_tensors: bool = False,
+                 return_transformer_outputs: bool = False) -> tuple:
     """Compute Predictions for Text.
 
     Computes predictions for a text with `NERDA` model. 
@@ -185,14 +197,19 @@ def predict_text(network: torch.nn.Module,
         return_confidence (bool, optional): if True, return 
             confidence scores for predicted tokens. Defaults
             to False.
-
+        return_tensors (bool, optional): if True, return
+            the output tensors of the last linear classification layer.
+            Defaults to False
+        return_transformer_outputs (bool_optional): if True, return
+            the output tensors of the transformer model instead of
+            the last classification layer when return_tensors is
+            set to True. Defaults to False.
     Returns:
         tuple: sentence- and word-tokenized text with corresponding
         predicted named-entity tags.
     """
     assert isinstance(text, str), "'text' must be a string."
     sentences = sent_tokenize(text)
-
     sentences = [word_tokenize(sentence) for sentence in sentences]
 
     predictions = predict(network = network, 
@@ -206,7 +223,9 @@ def predict_text(network: torch.nn.Module,
                           num_workers = num_workers,
                           pad_sequences = pad_sequences,
                           tag_encoder = tag_encoder,
-                          tag_outside = tag_outside)
+                          return_tensors = return_tensors,
+                          tag_outside = tag_outside,
+                          return_transformer_outputs = return_transformer_outputs)
 
     return sentences, predictions
 

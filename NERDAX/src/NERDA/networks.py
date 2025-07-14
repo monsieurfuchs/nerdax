@@ -28,7 +28,7 @@ class NERDANetwork(nn.Module):
         # extract transformer name
         transformer_name = transformer.name_or_path
         # extract AutoConfig, from which relevant parameters can be extracted.
-        transformer_config = AutoConfig.from_pretrained(transformer_name)
+        transformer_config = AutoConfig.from_pretrained(transformer_name, output_hidden_states=True)
 
         self.transformer = transformer
         self.dropout = nn.Dropout(dropout)
@@ -66,18 +66,17 @@ class NERDANetwork(nn.Module):
             'input_ids': input_ids.to(self.device),
             'attention_mask': masks.to(self.device),
             'token_type_ids': token_type_ids.to(self.device)
-            }
+        }
         
         # match args with transformer
         transformer_inputs = match_kwargs(self.transformer.forward, **transformer_inputs)
-           
-        outputs = self.transformer(**transformer_inputs)[0]
+        transformer_outputs = self.transformer(**transformer_inputs)
 
         # apply drop-out
-        outputs = self.dropout(outputs)
+        outputs = self.dropout(transformer_outputs[0])
 
         # outputs for all labels/tags
         outputs = self.tags(outputs)
 
-        return outputs
+        return outputs, transformer_outputs
 

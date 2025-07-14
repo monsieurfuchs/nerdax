@@ -57,7 +57,7 @@ def compute_loss(preds, target_tags, masks, device, n_tags):
     # Compute active loss to not compute loss of paddings
     active_loss = masks.view(-1) == 1
 
-    active_logits = preds.view(-1, n_tags)
+    active_logits = preds[0].view(-1, n_tags)
     active_labels = torch.where(
         active_loss,
         target_tags.view(-1),
