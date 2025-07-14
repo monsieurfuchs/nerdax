@@ -127,7 +127,7 @@ def predict(network: torch.nn.Module,
             
                 # TODO: Move assert statement to unit tests. Does not work 
                 # in boundary.
-                # assert len(preds) == len(sentences[i])            
+                # assert len(preds) == len(sentences[i])          
                 predictions.append(preds)
                 if return_confidence:
                     probabilities.append(probs)
@@ -135,8 +135,11 @@ def predict(network: torch.nn.Module,
             if return_confidence:
                 return predictions, probabilities
 
-            if return_tensors:
-                return tensors
+            if return_tensors and not return_confidence:
+                return predictions, tensors
+                
+            if return_tensors and return_confidence:
+               return predictions, probabilities, tensors
 
     return predictions
 
@@ -153,7 +156,8 @@ def predict_text(network: torch.nn.Module,
                  pad_sequences: bool = True,
                  return_confidence: bool = False,
                  sent_tokenize: Callable = sent_tokenize,
-                 word_tokenize: Callable = word_tokenize) -> tuple:
+                 word_tokenize: Callable = word_tokenize,
+                 return_tensors: bool = False) -> tuple:
     """Compute Predictions for Text.
 
     Computes predictions for a text with `NERDA` model. 
